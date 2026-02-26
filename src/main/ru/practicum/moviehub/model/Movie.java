@@ -9,18 +9,14 @@ public class Movie {
         return title;
     }
     public void setTitle(String title) {
-        if(title.length() <= 100 ) {
-            this.title = title;
-        }
+        this.title = title;
     }
 
     public int getYear() {
         return year;
     }
     public void setYear(int year) {
-        if(year >= 1888 || year <= 0) {
-            this.year = year;
-        }
+        this.year = year;
     }
 
     public long getId() {
