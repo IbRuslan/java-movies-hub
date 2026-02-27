@@ -70,6 +70,7 @@ public class MoviesApiTest {
         assertTrue(body.startsWith("[") && body.endsWith("]"),
                 "Ожидается JSON-массив");
     }
+
     @Test
     void getMovies_whenHasMovies_returnsList() throws Exception {
 
