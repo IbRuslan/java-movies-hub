@@ -74,16 +74,15 @@ public class MoviesApiTest {
     @Test
     void getMovies_whenHasMovies_returnsList() throws Exception {
 
-        createMovie("Matrix", 1999);
-        createMovie("Avatar", 2009);
+        createMovie("Матрица", 1999);
+        createMovie("Аватар", 2009);
 
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(BASE + "/movies"))
                 .GET()
                 .build();
 
-        HttpResponse<String> resp =
-                client.send(req, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, resp.statusCode());
 
@@ -99,38 +98,36 @@ public class MoviesApiTest {
     void getMovieById_whenExists_returns200() throws Exception {
 
 
-        Movie movie = createMovie("Interstellar", 2014);
+        Movie movie = createMovie("Игра", 1997);
 
         HttpRequest get = HttpRequest.newBuilder()
                 .uri(URI.create(BASE + "/movies/" + movie.getId()))
                 .GET()
                 .build();
 
-        HttpResponse<String> getResp =
-                client.send(get, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> getResp = client.send(get, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, getResp.statusCode());
-        assertTrue(getResp.body().contains("Interstellar"));
+        assertTrue(getResp.body().contains("Игра"));
     }
 
     @Test
     void postMovie_whenValid_returns201() throws Exception {
 
-        Movie movie = createMovie("Matrix", 1999);
+        Movie movie = createMovie("Матрица", 1999);
 
-        assertEquals("Matrix", movie.getTitle());
+        assertEquals("Матрица", movie.getTitle());
         assertEquals(1999, movie.getYear());
     }
 
     @Test
     void postMovie_whenEmptyTitle_returns422() throws Exception {
 
-        String json = """
-        {
-          "title": "",
-          "year": 1999
-        }
-        """;
+        Movie movie = new Movie();
+        movie.setTitle("");
+        movie.setYear(1999);
+
+        String json = GSON.toJson(movie);
 
         HttpResponse<String> resp = sendPost(json);
 
@@ -140,12 +137,11 @@ public class MoviesApiTest {
     @Test
     void postMovie_whenWrongContentType_returns415() throws Exception {
 
-        String json = """
-        {
-          "title": "Матрица",
-          "year": 1999
-        }  \s
-       \s""";
+        Movie movie = new Movie();
+        movie.setTitle("Матрица");
+        movie.setYear(1999);
+
+        String json = GSON.toJson(movie);
 
         HttpResponse<String> resp = sendPost(json, "text/plain");
 
@@ -157,7 +153,7 @@ public class MoviesApiTest {
         // 1. Большой тест с комментариями для облегчения
 
         // Создаем фильм
-        Movie movie = createMovie("Avatar", 2009);
+        Movie movie = createMovie("Аватар", 2009);
 
         // 3. Удаляем по реальному id
         HttpRequest deleteRequest = HttpRequest.newBuilder()
@@ -197,12 +193,11 @@ public class MoviesApiTest {
     }
 
     private Movie createMovie(String title, int year) throws Exception {
-        String json = """
-        {
-          "title": "%s",
-          "year": %d
-        }
-        """.formatted(title, year);
+        Movie movie = new Movie();
+        movie.setTitle(title);
+        movie.setYear(year);
+
+        String json = GSON.toJson(movie);
 
         HttpResponse<String> resp = sendPost(json, CT_JSON);
 
