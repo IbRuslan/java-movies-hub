@@ -25,7 +25,7 @@ public class MoviesHandler extends BaseHttpHandler {
         String path = ex.getRequestURI().getPath();
 
         switch (method.toUpperCase()) {
-            case "GET" -> handleGet(ex);
+            case "GET" -> handleGetRequest(ex, path);
             case "POST" -> {
                 if (path.equals("/movies")) {
                     handlePost(ex);
@@ -40,24 +40,29 @@ public class MoviesHandler extends BaseHttpHandler {
 
     private void handleGetRequest(HttpExchange ex, String path) throws IOException {
 
-        if (path.equals("/movies")) {
+        if (!path.equals("/movies")) {
+            if (path.startsWith("/movies/")) {
+                handleGetById(ex, path);
+                return;
+            }
+            sendError(ex, 404, "Incorrect request format");
+            return;
+        }
+
+        String query = ex.getRequestURI().getQuery();
+
+        if (query == null) {
             handleGet(ex);
             return;
         }
 
-        if (path.startsWith("/movies/")) {
-            handleGetById(ex, path);
-            return;
-        }
-
-        sendError(ex, 404, "Incorrect request format");
+        handleGetWithFilter(ex, query);
     }
 
     private void handleGet(HttpExchange ex) throws IOException {
         List<Movie> movies = store.getAll();
 
-        Gson gson = new Gson();
-        String json = gson.toJson(movies);
+        String json = GSON.toJson(movies);
 
         sendJson(ex, 200, json);
     }
@@ -80,11 +85,33 @@ public class MoviesHandler extends BaseHttpHandler {
             return;
         }
 
-        sendJson(ex, 200, movie.getTitle());
+        sendJson(ex, 200,  GSON.toJson(movie));
+    }
+
+    private void handleGetWithFilter(HttpExchange ex, String query) throws IOException {
+        if (!query.startsWith("year=")) {
+            sendError(ex, 400, "Некорректный параметр запроса — 'year'");
+            return;
+        }
+
+        String yearStr = query.substring("year=".length());
+
+        int year;
+        try {
+            year = Integer.parseInt(yearStr);
+        } catch (NumberFormatException e) {
+            sendError(ex, 400, "Некорректный параметр запроса — 'year'");
+            return;
+        }
+
+        List<Movie> filtered = store.getAll().stream()
+                .filter(movie -> movie.getYear() == year)
+                .toList();
+
+        sendJson(ex, 200, GSON.toJson(filtered));
     }
 
     private void handlePost(HttpExchange ex) throws IOException {
-        Gson gson = new Gson();
 
         if(!isJson(ex)) {
             sendError(ex, 415, "Unsupported Media Type");
@@ -96,7 +123,7 @@ public class MoviesHandler extends BaseHttpHandler {
 
         Movie movie;
         try {
-            movie = gson.fromJson(body, Movie.class);
+            movie = GSON.fromJson(body, Movie.class);
         } catch (JsonSyntaxException e) {
             sendError(ex, 400, "Incorrect JSON");
             return;
@@ -110,7 +137,7 @@ public class MoviesHandler extends BaseHttpHandler {
         }
 
         Movie created = store.add(movie);
-        sendJson(ex, 201, gson.toJson(created));
+        sendJson(ex, 201, GSON.toJson(created));
     }
 
     private void handleDeleteRequest(HttpExchange ex, String path) throws IOException {

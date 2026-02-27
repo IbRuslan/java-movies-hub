@@ -28,4 +28,9 @@ public class MoviesStore {
     public boolean delete(long id) {
         return movies.remove(id) != null;
     }
+
+    public void clear() {
+        movies.clear();
+        nextId = 1;
+    }
 }
