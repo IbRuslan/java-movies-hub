@@ -1,6 +1,5 @@
 package ru.practicum.moviehub.http;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import ru.practicum.moviehub.model.Movie;
@@ -113,7 +112,7 @@ public class MoviesHandler extends BaseHttpHandler {
 
     private void handlePost(HttpExchange ex) throws IOException {
 
-        if(!isJson(ex)) {
+        if (!isJson(ex)) {
             sendError(ex, 415, "Unsupported Media Type");
             return;
         }
